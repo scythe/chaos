@@ -7,7 +7,7 @@ require "ppmlib"
       returns a table of values describing the trajectory.
       the equations should be functions that take a time 
       and a table of prior values, and return a number.]]--
-function bogacki_shampine(eqns, ivs, tol, st, fi, maxvs)
+function bogacki_shampine(eqns, ivs, tol, st, fi, maxvs, special_conditions)
   local vals, kvals = {{}}, {{}, {}, {}, {}}
   local vn = #ivs -- the number of variables. we don't need to save this, but using #ivs is confusing.
   
@@ -55,8 +55,12 @@ function bogacki_shampine(eqns, ivs, tol, st, fi, maxvs)
       cnt = cnt + 1
       ts[cnt] = t+h
       vals[cnt] = {}
+      
+      special_conditions(nest)
+
         -- if a variable is periodic, we let it "wrap around"
       for i = 1, vn do vals[cnt][i] = maxvs[i] and nest[i] % maxvs[i] or nest[i] end 
+--      print(unpack(nest))
     else
       print("failed: " .. h .. " " .. err)
     end
@@ -65,7 +69,7 @@ function bogacki_shampine(eqns, ivs, tol, st, fi, maxvs)
   
   return ts, vals
 end
-    
+--[[
 function complexlorenz(rho1, rho2, b, sigma, e)
   return {
 function(t, xt) return -sigma * (xt[1] - xt[2] * math.cos(xt[3])) end,
@@ -89,4 +93,4 @@ filename = "lorenz"
 imfile = io.open(filename .. ".ppm", "w")
 ppmhead(imfile, 800, 800)
 ppmwritegraph(imfile, image, {0.2, 0.6, 0.8}, 255)
-io.close(imfile)
+io.close(imfile)  ]]--

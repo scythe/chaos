@@ -1,5 +1,7 @@
 
 require "ppmlib"
+require "matrix"
+require "regression"
 
 --[[  performs bogacki-shampine integration of 
       the system of differential equations described by fun_t
@@ -77,19 +79,55 @@ end
 
 test_times, test_vals = bogacki_shampine(complexlorenz(28, 0, 8/3, 10, 1/10), {1, 1, 1, 1}, 0.0001, 0, 1250, {nil, nil, math.pi * 2, nil})
 
-for i = 1, #test_vals do print(unpack(test_vals[i])) end
+cartesian = {}
 
-xhat = {0.8, -0.6}
-yhat = {0.6, 0.8}
-zhat = {0, 1}
-what = {0, 0} -- fix me!
-image = plot3dtbl(test_vals, 800, 800, 330, 430, 150, 300, {xhat, yhat, zhat, what})
+--project the polar coordinate flow onto cartesian coordinates so it can be graphed
+for ind, point in ipairs(test_vals) do
+  cartesian[ind] = {}
+  cartesian[ind][1] = point[1] * math.cos(point[3])
+  cartesian[ind][2] = point[1] * math.sin(point[3])
+  cartesian[ind][3] = point[2]
+  cartesian[ind][4] = point[4]
+end
 
-print(#test_vals)
+--now we need to find slices. we choose some points, and divide them at random into two slices
 
-filename = "lorenz"
+slices = {{}, {}}
 
-imfile = io.open(filename .. ".ppm", "w")
-ppmhead(imfile, 800, 800)
-ppmwritegraph(imfile, image, {0.2, 0.6, 0.8}, 255)
-io.close(imfile)
+for i = 1, 100 do 
+  slices[i > 50 and 2 or 1][i] = cartesian[math.random(#cartesian)]
+end
+
+alphas, betas = {}, {}
+
+repeat
+  switchless = true
+  for k, slice in ipairs(slices) do alphas[k], betas[k] = findplane(slice) end
+  for k, slice in ipairs(slices) do
+    l = 3 - k --the index of the other slice
+    for i, point in ipairs(slice) do
+      --if a point is closer to the other slice than the slice that it is in, move it to the other slice
+      if distance(point, alpha[k], beta[k]) > distance(point, alpha[l], beta[l]) then
+        table.insert(slices[l], table.remove(slices[k], i))
+              --once there are no points to move, we have the best slices we can find
+        switchless = false
+      end
+    end
+  end
+until switchless
+
+--now alphas and betas represent the desired slices for the atlas
+
+raw_projections = {{}, {}}
+
+for k, projection in ipairs(raw_projections) do
+  for i, point in ipairs(cartesian) do
+    for dir, mag in ipairs(point) do
+      projection[i][dir] = x - (betas[k] and betas[k][dir] or 1) * distance(x, alphas[k], betas[k]) / sqrt(betas[k][1]^2 + betas[k][2]^2 + betas[k][3]^2 + 1)
+    end
+  end
+end
+
+
+      
+
