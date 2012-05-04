@@ -17,7 +17,6 @@ function dhc_iter(old, step, a)
 end
 
 function dihydrogencation_leapfrog(s_0, z_0, t_max, step, a)
-                --s, z, v_s, v_z, a_s, a_z, t  
   local val_t = {{s = s_0, z = z_0, vs = 0, vz = 0, as = 0, az = 0, t = 0}}
   local s, z, vs, vz, as, az
   
@@ -28,8 +27,25 @@ function dihydrogencation_leapfrog(s_0, z_0, t_max, step, a)
   return val_t
 end
 
-trajectory = dihydrogencation_leapfrog(4, 4, 500, 0.002, 1)
+--poincare section at the mean value of the azimuthal radius.
+--binary symbolic dynamics is just the sign of z.
+function dihydrogen_poincare(a)
+  local trajectory = dihydrogencation_leapfrog(4, 4, 5000, 0.001, 1)
+  
+  sm = 0
+  for k, v in ipairs(trajectory) do sm = sm + v.s end
+  sm = sm / #trajectory
+  
+  for k, v in ipairs(trajectory) do
+    if k < #trajectory and v.s < sm and trajectory[k+1].s > sm then
+      print(v.z < 0 and 0 or 1)
+    end
+  end
+end
 
+dihydrogen_poincare(1)
+
+--[[
 plot = {}
 
 for k, v in ipairs(trajectory) do plot[k] = {v.s, v.z} end
@@ -43,4 +59,4 @@ ppmhead(imfile, 800, 800)
 ppmwritegraph(imfile, image, {0.3, 0.7, 1.0}, 255)
 io.close(imfile)
 
-os.execute("pnmtopng dihydrogencation.ppm > dihydrogencation.png")
+os.execute("pnmtopng dihydrogencation.ppm > dihydrogencation.png")]]
