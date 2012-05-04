@@ -21,14 +21,16 @@ function plot3dtbl(valt, width, height, xoff, yoff, axisoriginx, axisoriginy, ha
   local image = {} --create a blank image
   for y = 0, height - 1 do for x = 1, width do image[y*width + x] = 0 end end
   
-  for k, v in ipairs(test_vals) do
+  for k, v in ipairs(valt) do
     local realx, realy = xoff, yoff
+  --  print(unpack(v))
     for dir, mag in ipairs(v) do
       realx, realy = realx + hats[dir][1] * mag * 20, realy + hats[dir][2] * mag * 20
     end
     realy = height - realy
+  --  print(realx, realy)
     local coord = math.floor(realy) * width + math.floor(realx)
-    if image[coord] and k > 100 and image[coord] < 240 then image[coord] = image[coord] + 30 end
+    if image[coord] and k > 100 and image[coord] < 240 then image[coord] = image[coord] + 80 end
   end
   
   for k, v in ipairs(hats) do
